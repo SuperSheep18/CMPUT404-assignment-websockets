@@ -26,6 +26,8 @@ app = Flask(__name__)
 sockets = Sockets(app)
 app.debug = True
 
+clients = list()
+
 class World:
     def __init__(self):
         self.clear()
@@ -53,34 +55,76 @@ class World:
     def clear(self):
         self.space = dict()
 
-    def get(self, entity):
+    def get_entity(self, entity):
         return self.space.get(entity,dict())
     
     def world(self):
         return self.space
 
+class Client:
+    def __init__(self):
+        self.queue = queue.Queue()
+
+    def put(self, v):
+        self.queue.put_nowait(v)
+
+    def get(self):
+        return self.queue.get()
+
 myWorld = World()        
 
-def set_listener( entity, data ):
+def set_listener( entity ):
     ''' do something with the update ! '''
 
-myWorld.add_set_listener( set_listener )
+    myWorld.add_set_listener( entity )
         
 @app.route('/')
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    # This makes testing easier because we can manually request urls to ensure they work.
+    return app.send_static_file('index.html') #flask.redirect("/static/index.html")
+
+# Do we need this like last time? Seems harmless to keep it here.
+@app.route('/json2.js')
+def json2():
+    return app.send_static_file('json2.js')
 
 def read_ws(ws,client):
     '''A greenlet function that reads from the websocket and updates the world'''
     # XXX: TODO IMPLEMENT ME
-    return None
+    try:
+        while True:
+            msg = ws.receive()
+            print "WS RECV: %s" %msg
+            if(msg is not None):
+                packet = json.loads(msg)
+                send_all_json(packet)
+            else:
+                break
+    except:
+        '''Done'''
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
     '''Fufill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket '''
     # XXX: TODO IMPLEMENT ME
+    # Not sure if any of this is right - from chat.py
+    client = Client()
+    clients.append(client)
+    set_listener(client)
+    g = gevent.spawn(read_ws, ws, client)
+    # In the examples from class, he also had a list of clients. Not sure if we 
+    # would need a similar thing here
+    try:
+        while True:
+            msg = client.get() # Need to figure out how to get world here. Add entity to the function paramters?
+            ws.send(msg)
+    except Exception as e:
+            print "WS Error %s" %e
+    finally:
+            clients.remove(client)
+            gevent.kill(g)
     return None
 
 
@@ -97,23 +141,30 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    if(request == "POST"):
+        data = flask_post_json()
+        myWorld.set(entity, data)
+    elif(request == "PUT"):
+        data = flask_post_json()
+        myWorld.set(entity, data)
+    return flask.jsonify(myWorld.get_entity())
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    return flask.jsonify(myWorld.world())
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return flask.jsonify(myWorld.get_entity(entity)).data.rstrip()
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return flask.jsonify(myWorld.world())
 
 
 

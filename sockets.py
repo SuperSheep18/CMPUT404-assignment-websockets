@@ -73,10 +73,10 @@ class Client:
 
 myWorld = World()        
 
-def set_listener( entity ):
+def set_listener( entity, data ):
     ''' do something with the update ! '''
 
-    myWorld.add_set_listener( entity )
+myWorld.add_set_listener( set_listener )
         
 @app.route('/')
 def hello():
@@ -98,7 +98,6 @@ def read_ws(ws,client):
             print "WS RECV: %s" %msg
             if(msg is not None):
                 packet = json.loads(msg)
-                send_all_json(packet)
             else:
                 break
     except:
@@ -106,13 +105,13 @@ def read_ws(ws,client):
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
-    '''Fufill the websocket URL of /subscribe, every update notify the
+    '''Fulfill the websocket URL of /subscribe, every update notify the
        websocket and read updates from the websocket '''
     # XXX: TODO IMPLEMENT ME
     # Not sure if any of this is right - from chat.py
     client = Client()
     clients.append(client)
-    set_listener(client)
+
     g = gevent.spawn(read_ws, ws, client)
     # In the examples from class, he also had a list of clients. Not sure if we 
     # would need a similar thing here
@@ -141,12 +140,8 @@ def flask_post_json():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    if(request == "POST"):
-        data = flask_post_json()
-        myWorld.set(entity, data)
-    elif(request == "PUT"):
-        data = flask_post_json()
-        myWorld.set(entity, data)
+    data = flask_post_json()
+    myWorld.set(entity, data)
     return flask.jsonify(myWorld.get_entity())
 
 @app.route("/world", methods=['POST','GET'])    

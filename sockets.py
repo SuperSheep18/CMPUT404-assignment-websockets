@@ -28,6 +28,26 @@ app.debug = True
 
 clients = list()
 
+class Client:
+    def __init__(self):
+        self.queue = queue.Queue()
+
+    def put(self, v):
+        self.queue.put_nowait(v)
+
+    def get(self):
+        return self.queue.get()
+
+def sendall(msg):
+    for client in clients:
+        client.put(msg)
+
+def sendall_json(jsonObj):
+    sendall(json.dumps(jsonObj))
+
+def set_listener(entity, data):
+    sendall_json({ entity : data });
+
 class World:
     def __init__(self):
         self.clear()
@@ -61,15 +81,7 @@ class World:
     def world(self):
         return self.space
 
-class Client:
-    def __init__(self):
-        self.queue = queue.Queue()
 
-    def put(self, v):
-        self.queue.put_nowait(v)
-
-    def get(self):
-        return self.queue.get()
 
 myWorld = World()        
 
@@ -98,6 +110,9 @@ def read_ws(ws,client):
             print "WS RECV: %s" %msg
             if(msg is not None):
                 packet = json.loads(msg)
+                for key in packet:
+                    val = packet[key]
+                    myWorld.set(key, value)
             else:
                 break
     except:
@@ -142,7 +157,7 @@ def update(entity):
     '''update the entities via this interface'''
     data = flask_post_json()
     myWorld.set(entity, data)
-    return flask.jsonify(myWorld.get_entity())
+    return flask.jsonify(myWorld.get_entity(entity))
 
 @app.route("/world", methods=['POST','GET'])    
 def world():

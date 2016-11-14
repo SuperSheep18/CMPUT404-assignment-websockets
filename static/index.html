@@ -117,11 +117,11 @@ function addEntity(entity, data) {
     //XXX: Send a XHTML Request that updates the entity you just modified!
     var obs = JSON.stringify(data);
     console.log("addEntity: JSONXMLHTTPRequest sent.");
-    //sendJSONXMLHTTPRequest("entity/"+entity, obs, function(cb){});// url objects callback. send us to the entity url?
     socket.send(obs);
 }
 var counter = 0;
 function addEntityWithoutName(data) {
+    console.log(data)
     var name = "X"+(counter++)%100;
     addEntity(name,data);
 }
@@ -240,7 +240,6 @@ function wsSetup() {
     socket = new WebSocket(url);
     socket.onopen = function() {
         //XXX: TODO What are you going to do here?
-        socket.send("Client connected.")
     };
     socket.onerror = function(msg) {
         debug("WebSocket Error:" + msg.data);
@@ -248,7 +247,8 @@ function wsSetup() {
     socket.onmessage = function(msg) {  
         try {
             debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?            
+            //XXX: TODO What are you going to do here?   
+            //addMessage(JSON.parse(msg.data));        
         } catch (e) {
             alert("socket on message: " + e);
         }

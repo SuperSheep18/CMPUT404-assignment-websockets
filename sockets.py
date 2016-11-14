@@ -42,12 +42,6 @@ def sendall(msg):
     for client in clients:
         client.put(msg)
 
-def sendall_json(jsonObj):
-    sendall(json.dumps(jsonObj))
-
-def set_listener(entity, data):
-    sendall_json({ entity : data });
-
 class World:
     def __init__(self):
         self.clear()
@@ -75,7 +69,7 @@ class World:
     def clear(self):
         self.space = dict()
 
-    def get_entity(self, entity):
+    def get(self, entity):
         return self.space.get(entity,dict())
     
     def world(self):
@@ -85,8 +79,12 @@ class World:
 
 myWorld = World()        
 
-def set_listener( entity, data ):
+def sendall_json(jsonObj):
+    sendall(json.dumps(jsonObj))
+
+def set_listener(entity, data):
     ''' do something with the update ! '''
+    #sendall_json({ entity : data })
 
 myWorld.add_set_listener( set_listener )
         
@@ -109,15 +107,17 @@ def read_ws(ws,client):
             msg = ws.receive()
             print "WS RECV: %s" %msg
             if(msg is not None):
+
                 packet = json.loads(msg)
                 for key in packet:
                     val = packet[key]
-                    myWorld.set(key, value)
+                    myWorld.set(key, val)
                     print("World key and value set.")
             else:
                 break
-    except:
+    except Exception as e:
         '''Done'''
+        print(e.message)
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
@@ -136,10 +136,10 @@ def subscribe_socket(ws):
             msg = client.get() # Need to figure out how to get world here. Add entity to the function paramters?
             ws.send(msg)
     except Exception as e:
-            print "WS Error %s" %e
+        print "WS Error %s" %e
     finally:
-            clients.remove(client)
-            gevent.kill(g)
+        clients.remove(client)
+        gevent.kill(g)
     return None
 
 
@@ -155,27 +155,28 @@ def flask_post_json():
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
+    print("GOT HERE")
     '''update the entities via this interface'''
     data = flask_post_json()
     myWorld.set(entity, data)
-    return flask.jsonify(myWorld.get_entity(entity))
+    return json.dumps(myWorld.get(entity))
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return flask.jsonify(myWorld.world())
+    return json.dumps(myWorld.world())
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return flask.jsonify(myWorld.get_entity(entity)).data.rstrip()
+    return json.dumps(myWorld.get(entity)).data.rstrip()
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
-    return flask.jsonify(myWorld.world())
+    return json.dumps(myWorld.world())
 
 
 

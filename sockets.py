@@ -42,11 +42,6 @@ def sendall(msg):
     for client in clients:
         client.put(msg)
 
-def sendall_json(jsonObj):
-    sendall(json.dumps(jsonObj))
-
-def set_listener(entity, data):
-    sendall_json({ entity : data });
 
 class World:
     def __init__(self):
@@ -85,8 +80,12 @@ class World:
 
 myWorld = World()        
 
+def sendall_json(jsonObj):
+    sendall(json.dumps(jsonObj))
+
 def set_listener( entity, data ):
     ''' do something with the update ! '''
+    sendall_json({ entity : data })
 
 myWorld.add_set_listener( set_listener )
         

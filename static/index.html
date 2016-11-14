@@ -109,12 +109,16 @@ function getPosition(e) {
         return [x,y];
     }
 }
+
+
 function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
     var obs = JSON.stringify(data);
-    sendJSONXMLHTTPRequest("entity/"+entity, obs, function(cb){});// url objects callback. send us to the entity url?
+    console.log("addEntity: JSONXMLHTTPRequest sent.");
+    //sendJSONXMLHTTPRequest("entity/"+entity, obs, function(cb){});// url objects callback. send us to the entity url?
+    socket.send(obs);
 }
 var counter = 0;
 function addEntityWithoutName(data) {

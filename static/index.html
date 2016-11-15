@@ -25,6 +25,10 @@
   <body style="height:100%; width:100%; margin: 0px; background: url(http://assets.bwbx.io/images/users/iqjWHBFdfxIU/iiia6iHYFRVA/v4/-1x-1.jpg); background-size: 100% 100%;"> 
     <div id="debug"></div>
      <button type="button" onclick="thereIsNoNeedToBeUpset();" >There is no need to be upset (Click for brush change!)</button>
+
+      <button type="button" onclick="changeToRed();" >Red</button>
+      <button type="button" onclick="changeToGreen();" >Green</button>
+      <button type="button" onclick="changeToBlue();" >Blue</button>
      <canvas id="c" width="100%" height="100%"></canvas> 
 
     <script>
@@ -40,10 +44,22 @@ var socket;
 
 
 var jimmy = false;
+var color = "red";
 var jimmypic = new Image();
 jimmypic.src = "http://web.pdx.edu/~phillip2/342/grid/img/face1.png";
 function thereIsNoNeedToBeUpset(){
     jimmy = !jimmy;
+}
+function changeToRed(){
+    color = "red";
+}
+
+function changeToGreen(){
+    color = "Green";
+}
+
+function changeToBlue(){
+    color = "Blue";
 }
 
 
@@ -241,16 +257,16 @@ mouse = (function() {
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
     if (jimmy == true) {
-        addEntityWithoutName({'x':x,'y':y,'colour':'blue', "jimmy":'true'});
+        addEntityWithoutName({'x':x,'y':y,'colour':color, "jimmy":'true'});
     } else {
-        addEntityWithoutName({'x':x,'y':y,'colour':'blue', "jimmy":'false'});
+        addEntityWithoutName({'x':x,'y':y,'colour':color, "jimmy":'false'});
     }
 });
 mouse.mouseuppers.push(function(x,y,clicked,e) {
     if (jimmy == true) {
-        addEntityWithoutName({'x':x,'y':y,'colour':'red', "jimmy":'true'});
+        addEntityWithoutName({'x':x,'y':y,'colour':color, "jimmy":'true'});
     } else {
-        addEntityWithoutName({'x':x,'y':y,'colour':'red', "jimmy":'false'});
+        addEntityWithoutName({'x':x,'y':y,'colour':color, "jimmy":'false'});
     }
 });
 mouse.mousedraggers.push(function(x,y,clicked,e) {

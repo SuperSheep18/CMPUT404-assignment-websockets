@@ -24,8 +24,7 @@
   </head> 
   <body style="height:100%; width:100%; margin: 0px; background: url(http://assets.bwbx.io/images/users/iqjWHBFdfxIU/iiia6iHYFRVA/v4/-1x-1.jpg); background-size: 100% 100%;"> 
     <div id="debug"></div>
-     <button type="button" onclick="thereIsNoNeedToBeUpset();" >There is no need to be upset</button>
-     <button type="button" onclick="clearScreen();" >Clear</button>
+     <button type="button" onclick="thereIsNoNeedToBeUpset();" >There is no need to be upset (Click for brush change!)</button>
      <canvas id="c" width="100%" height="100%"></canvas> 
 
     <script>
@@ -54,44 +53,6 @@ function debug(str) {
 }
 var world = {};
 //XXX: TODO Make this prettier!
-
-// ONLY USED FOR THE CLEAR SCREEN BUTTON 
-function sendJSONXMLHTTPRequest(url, objects, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState==4) {
-            try {
-                if (xhr.status==200) {
-                    //XXXcheck: parse some JSON from the request!
-                    //XXXcheck: Pass the data to the callback!
-                    callback(JSON.parse(xhr.responseText));        // The callback isnt currently used but hindle showed this in class as correct
-                }
-            } 
-            catch(e) {
-                alert('Error: ' + e.name);
-            }
-        }
-    };
-
-    if(objects != null){
-        //XXXcheck: POST to a URL
-        xhr.open('POST', url, true);
-        xhr.mimeType = 'application/json';          // Should be override mimetype
-        xhr.send(objects);                          // Do we always have to send these? Sometimes might send null depending on request type.
-    }else{
-        xhr.open('GET', url, true);
-        xhr.mimeType = 'application/json';          // Should be override mimetype
-        xhr.send(null);                             //Use this for GET requests
-    }
-    
-    //XXXcheck: set the mimetype and the accept headers!
-    // Remember to use application/json !
-}
-
-function clearScreen(){
-    sendJSONXMLHTTPRequest("/clear", null, function(cb){world = cb;});// url objects callback. send us to the entity url?
-}
-
 function drawCircle(context,entity) {
     console.log(entity["jimmy"]);
     if (entity["jimmy"] == "true") {

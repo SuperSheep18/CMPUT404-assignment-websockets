@@ -38,6 +38,16 @@ var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 var wscounter = 0;
 var socket;
+
+
+var jimmy = false;
+var jimmypic = new Image();
+jimmypic.src = "http://web.pdx.edu/~phillip2/342/grid/img/face1.png";
+function thereIsNoNeedToBeUpset(){
+    jimmy = !jimmy;
+}
+
+
 function debug(str) {
     var debugDiv = document.getElementById('debug');
     debugDiv.innerHTML = "" + str;
@@ -45,24 +55,60 @@ function debug(str) {
 var world = {};
 //XXX: TODO Make this prettier!
 
+// ONLY USED FOR THE CLEAR SCREEN BUTTON 
+function sendJSONXMLHTTPRequest(url, objects, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState==4) {
+            try {
+                if (xhr.status==200) {
+                    //XXXcheck: parse some JSON from the request!
+                    //XXXcheck: Pass the data to the callback!
+                    callback(JSON.parse(xhr.responseText));        // The callback isnt currently used but hindle showed this in class as correct
+                }
+            } 
+            catch(e) {
+                alert('Error: ' + e.name);
+            }
+        }
+    };
+
+    if(objects != null){
+        //XXXcheck: POST to a URL
+        xhr.open('POST', url, true);
+        xhr.mimeType = 'application/json';          // Should be override mimetype
+        xhr.send(objects);                          // Do we always have to send these? Sometimes might send null depending on request type.
+    }else{
+        xhr.open('GET', url, true);
+        xhr.mimeType = 'application/json';          // Should be override mimetype
+        xhr.send(null);                             //Use this for GET requests
+    }
+    
+    //XXXcheck: set the mimetype and the accept headers!
+    // Remember to use application/json !
+}
+
 function clearScreen(){
-    var url = "ws://"+host+"/clear";   
-    socket = new WebSocket(url);
-    socket.send(null);
-    socket.close();
+    sendJSONXMLHTTPRequest("/clear", null, function(cb){world = cb;});// url objects callback. send us to the entity url?
 }
 
 function drawCircle(context,entity) {
-    with(context) {
-        beginPath();                
-        lineWidth = 3;
-        var x = entity["x"];
-        var y = entity["y"];
-        //moveTo(x,y);
-        fillStyle = entity["colour"];
-        strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+    console.log(entity["jimmy"]);
+    if (entity["jimmy"] == "true") {
+        context.drawImage(jimmypic, entity["x"] - jimmypic.width/2 , entity["y"]-jimmypic.height/2);
+    }
+    else {
+        with(context) {
+            beginPath();                
+            lineWidth = 3;
+            var x = entity["x"];
+            var y = entity["y"];
+            //moveTo(x,y);
+            fillStyle = entity["colour"];
+            strokeStyle = fillStyle;
+            arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
+            stroke();                                
+        }
     }
 }
 function prepEntity(entity) {
@@ -233,14 +279,27 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    if (jimmy == true) {
+        addEntityWithoutName({'x':x,'y':y,'colour':'blue', "jimmy":'true'});
+    } else {
+        addEntityWithoutName({'x':x,'y':y,'colour':'blue', "jimmy":'false'});
+    }
 });
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    if (jimmy == true) {
+        addEntityWithoutName({'x':x,'y':y,'colour':'red', "jimmy":'true'});
+    } else {
+        addEntityWithoutName({'x':x,'y':y,'colour':'red', "jimmy":'false'});
+    }
 });
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    if (jimmy == true) {
+        addEntityWithoutName({'x':x,'y':y,'colour':'green',
+                          'radius':10, "jimmy":'true'});
+    } else {
+        addEntityWithoutName({'x':x,'y':y,'colour':'green',
+                          'radius':10, "jimmy":'false'});
+    }
 });
 function update() {
     drawFrame();

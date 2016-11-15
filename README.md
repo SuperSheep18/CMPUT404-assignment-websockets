@@ -57,3 +57,10 @@ Contributors
 
 * Mark Galloway
 * Abram Hindle
+
+OTHER CITATIONS
+===============
+
+- Our past AJAX assignment: <https://github.com/SuperSheep18/CMPUT404-assignment-ajax> (Cited for some of the Jimmy Drawing Logic we re-used.)
+- Abram Hindle's Websocket Example form the notes: <https://github.com/abramhindle/WebSocketsExamples> (Cited for the client object, send_json_all, read_ws, and subscribe_ws functions)
+- Course Websocket Notes: <http://webdocs.cs.ualberta.ca/~hindle1/2014/09-websockets.pdf> (Cited for understanding and usage of the socket.onsend())

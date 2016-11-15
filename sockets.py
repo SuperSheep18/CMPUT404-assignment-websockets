@@ -42,6 +42,12 @@ def sendall(msg):
     for client in clients:
         client.put(msg)
 
+def sendall_json(jsonObj):
+    sendall(json.dumps(jsonObj))
+
+def set_listener(entity, data):
+    sendall_json({ entity : data });
+
 class World:
     def __init__(self):
         self.clear()
@@ -79,13 +85,6 @@ class World:
 
 myWorld = World()        
 
-def sendall_json(jsonObj):
-    sendall(json.dumps(jsonObj))
-
-def set_listener(entity, data):
-    ''' do something with the update ! '''
-    #sendall_json({ entity : data })
-
 myWorld.add_set_listener( set_listener )
         
 @app.route('/')
@@ -105,19 +104,18 @@ def read_ws(ws,client):
     try:
         while True:
             msg = ws.receive()
-            print "WS RECV: %s" %msg
+            #print "WS RECV: %s" %msg
             if(msg is not None):
-
                 packet = json.loads(msg)
                 for key in packet:
                     val = packet[key]
                     myWorld.set(key, val)
-                    print("World key and value set.")
             else:
                 break
-    except Exception as e:
-        '''Done'''
-        print(e.message)
+    except Exception as error:
+    	print(msg)
+        print("Error in read_ws: " + error.message)
+    return None
 
 @sockets.route('/subscribe')
 def subscribe_socket(ws):
@@ -131,8 +129,14 @@ def subscribe_socket(ws):
     g = gevent.spawn(read_ws, ws, client)
     # In the examples from class, he also had a list of clients. Not sure if we 
     # would need a similar thing here
+
+    msg = json.dumps(myWorld.world())
+    ws.send(msg)
+
     try:
+    	#print("subscribe_socket: Socket subscribed.")
         while True:
+            #print("subscribe_socket: Notifying and reading.")
             msg = client.get() # Need to figure out how to get world here. Add entity to the function paramters?
             ws.send(msg)
     except Exception as e:
@@ -155,28 +159,33 @@ def flask_post_json():
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
-    print("GOT HERE")
     '''update the entities via this interface'''
-    data = flask_post_json()
-    myWorld.set(entity, data)
-    return json.dumps(myWorld.get(entity))
+    # Haven't thought about put yet. . .
+    if (request.method == "POST"):
+        data = flask_post_json()    #gets data from the flask post
+        myWorld.set(entity, data)   # update the world model
+    elif (request.method =="PUT"):
+    # Not sure if this should be handled differently. . . 
+        data = flask_post_json()    #gets data from the flask post
+        myWorld.set(entity, data)   # update the world model
+    return flask.jsonify(myWorld.get(entity))
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return json.dumps(myWorld.world())
+    return flask.jsonify(myWorld.world())
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return json.dumps(myWorld.get(entity)).data.rstrip()
+    return flask.jsonify(myWorld.get(entity)).data.rstrip()
 
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
     myWorld.clear()
-    return json.dumps(myWorld.world())
+    return flask.jsonify(myWorld.world())
 
 
 

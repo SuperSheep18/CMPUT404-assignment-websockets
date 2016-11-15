@@ -22,12 +22,15 @@
     "/>
     <script src="json2.js"></script>
   </head> 
-  <body bgcolor="white" height="100%" width="100%"> 
+  <body style="height:100%; width:100%; margin: 0px; background: url(http://assets.bwbx.io/images/users/iqjWHBFdfxIU/iiia6iHYFRVA/v4/-1x-1.jpg); background-size: 100% 100%;"> 
     <div id="debug"></div>
-    <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
+     <button type="button" onclick="thereIsNoNeedToBeUpset();" >There is no need to be upset</button>
+     <button type="button" onclick="clearScreen();" >Clear</button>
+     <canvas id="c" width="100%" height="100%"></canvas> 
 
     <script>
-      // Fix me
+      // Fix 
+
 var canvas = document.getElementById('c');
 var host = window.location.host;
 var context = canvas.getContext("2d");
@@ -39,9 +42,16 @@ function debug(str) {
     var debugDiv = document.getElementById('debug');
     debugDiv.innerHTML = "" + str;
 }
-debug("Test");
-world = {};
+var world = {};
 //XXX: TODO Make this prettier!
+
+function clearScreen(){
+    var url = "ws://"+host+"/clear";   
+    socket = new WebSocket(url);
+    socket.send(null);
+    socket.close();
+}
+
 function drawCircle(context,entity) {
     with(context) {
         beginPath();                
@@ -67,8 +77,7 @@ function prepEntity(entity) {
 function clearFrame() {
     with(context) {
     moveTo(0,0);
-    fillStyle = "#000";
-    fillRect(0,0,W,H);
+    context.clearRect(0,0, context.canvas.width,context.canvas.height);
     }
 }
 // This actually draws the frame
@@ -115,13 +124,14 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just modified!
-    var obs = JSON.stringify(data);
-    console.log("addEntity: JSONXMLHTTPRequest sent.");
+    var obs = JSON.stringify(world);
+    //console.log("addEntity: JSONXMLHTTPRequest sent.");
+    //console.log(obs)
+    //sendJSONXMLHTTPRequest("entity/"+entity, obs, function(cb){});// url objects callback. send us to the entity url?
     socket.send(obs);
 }
 var counter = 0;
 function addEntityWithoutName(data) {
-    console.log(data)
     var name = "X"+(counter++)%100;
     addEntity(name,data);
 }
@@ -246,9 +256,13 @@ function wsSetup() {
     };
     socket.onmessage = function(msg) {  
         try {
-            debug("WebSocket Recv:" + msg.data);
-            //XXX: TODO What are you going to do here?   
-            //addMessage(JSON.parse(msg.data));        
+            //XXX: TODO What are you going to do here?
+            //console.log("Message received.")        
+            var parsedMsg = JSON.parse(msg.data);
+            for (var key in parsedMsg) {
+                world[key] = parsedMsg[key];
+            }
+            drawNextFrame();
         } catch (e) {
             alert("socket on message: " + e);
         }
